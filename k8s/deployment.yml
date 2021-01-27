@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-registry
+spec:
+  selector:
+    matchLabels: {}
+  template:
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: docker-registry-images
+      containers:
+        - name: docker-registry
+          image: docker.io/registry:2
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: docker-registry
+            - secretRef:
+                name: docker-registry
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - mountPath: /var/lib/registry
+              name: data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: docker-registry-images
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30G
